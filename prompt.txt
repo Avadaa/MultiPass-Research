@@ -113,7 +113,7 @@ Please research and report on the following categories for Finland specifically.
 - Flag these conflicts explicitly - I need to know where "common wisdom" is wrong for this market.
 
 ## Format of output
-- Cite specific sources (with URLs where possible)
+- Cite specific sources (with full URLs where possible)
 - Flag conflicting information openly rather than smoothing it over
 - Skip categories that genuinely don't apply (e.g., skip Europass for non-European markets)
 
