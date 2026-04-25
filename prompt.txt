@@ -1,0 +1,124 @@
+I'm researching CV (resume) conventions specific to Finland to write an authoritative, locally-grounded guide page for a multilingual CV builder (CoverSentry). I need verified factual findings I can use to write original content, NOT finished copy. Prioritize recency (2023-2026 sources), official domestic sources (government employment agencies, national data protection authorities, major recruitment platforms, HR associations), and named primary sources over generic English-language CV advice blogs.
+
+Please research and report on the following categories for Finland specifically. For each category, prioritize information that is locally distinctive - what makes Finland's CV conventions different from neighboring markets or generic "European CV" advice.
+
+## 1. Terminology
+- What is a CV called in the local language(s)? Are multiple terms in use (e.g., Finland's "ansioluettelo" vs "CV")?
+- Is one term dominant in formal vs informal contexts?
+- Is there a distinction between CV and resume usage in this market?
+
+## 2. Language(s) to write the CV in
+- Which languages are commonly accepted or expected?
+- When is a local-language CV expected vs an English CV?
+- Do candidates typically maintain multiple language versions? In which industries?
+- Are there regional language considerations within the country (e.g., Russian in eastern Latvia, Swedish in Finland)?
+
+## 3. CV length
+- What is the expected page count for standard candidates?
+- How does it differ for students, experienced professionals, senior executives, and academic roles?
+- Is there a hard upper limit?
+
+## 4. Photo convention
+- Is a photo expected, optional, or actively discouraged?
+- Industry variation within the country - conservative sectors (banking, insurance, public admin) vs progressive (IT, startups, international)?
+- What type of photo is expected if included (professional portrait, neutral background, specific dimensions)?
+- Legal framework around photo discrimination - is there anti-discrimination law that affects photo norms?
+- Is there a recent shift in photo norms (past 2-3 years)?
+
+## 5. Personal data disclosure
+- Which personal data items are conventionally included vs excluded? Cover: full name, date of birth, marital status, nationality, place of birth, national ID number, religion, gender, number of children, home address, phone.
+- Is there legal context (anti-discrimination law, data protection law) that shapes what employers may ask?
+- Is the convention shifting (and if so, in which direction)?
+- Which data items are the strongest "foreign CV" signals when included inappropriately?
+
+## 6. Standard CV structure
+- Typical section order in a local CV
+- Chronological order within sections - reverse chronological dominant, or another pattern?
+- Is a professional summary/profile section at the top expected, optional, or unusual?
+- Are references listed directly, "available on request," or not mentioned at all?
+- Are there sections that are distinctively common in this market that would be unusual elsewhere (e.g., luottamustehtävät in Finland, Ausbildung vs Studium in Germany)?
+
+## 7. Date and format conventions
+- Date format expected for employment dates (MM/YYYY vs DD.MM.YYYY vs written month)
+- File format - PDF dominant, DOCX acceptable, or other?
+- Are signed CVs expected in any contexts?
+- Font and formatting conventions if distinctive
+
+## 8. Employment gap handling
+- How are gaps in employment treated culturally - ignored, explained, actively problematic?
+- At what duration does a gap need to be explained?
+- Acceptable explanations (parental leave, study, sabbatical, illness, military service)?
+
+## 9. Tone and self-presentation conventions
+- Is modest/factual expected, or confident/claim-driven?
+- Is flowery or ornamented language expected, neutral, or actively discouraged?
+- How are achievements typically phrased (quantified claims, humble descriptions, etc.)?
+
+## 10. Europass adoption (EU/EEA countries only - skip for non-European markets)
+- Is Europass widely used, accepted alongside alternatives, or discouraged?
+- Is there a government body that actively promotes it?
+- In which contexts is Europass specifically recommended (public sector, EU institutions, cross-border applications)?
+- Does adoption differ by industry (tech vs public sector)?
+
+## 11. Public employment authority
+- Full name of the national employment service
+- Primary website URL
+- Has it recently reformed or rebranded (past 2-3 years)?
+- Does it provide official CV guidance? Link to that guidance.
+- Does it operate a dominant job board?
+
+## 12. Dominant job boards and recruitment platforms
+- 2-4 most-used job boards in the local market (general and sector-specific)
+- Any market-specific platforms for IT, startups, or specialist roles?
+- How does LinkedIn rank vs domestic platforms?
+- Any specialist platforms for blue-collar or service-sector roles?
+
+## 13. Legal and regulatory framework
+- Primary anti-discrimination law affecting recruitment (name, year, enforcement body)
+- Data protection specifics for recruitment (beyond GDPR base - is there country-specific implementation that affects CV data?)
+- Any labor code provisions that govern what employers may request from candidates
+- Any recent court rulings (past 2-3 years) that affect CV practices
+
+## 14. Market-specific "third document" or embedded clause phenomena
+- Is there a document or clause that's part of the local application package but outside standard CV norms? Examples: Germany's Dritte Seite, Poland's klauzula RODO, Japan's shokumu-keirekisho.
+- If yes, is it part of the CV or separate?
+- Current standard wording/format if applicable
+
+## 15. Diaspora and cross-border context
+- What percentage of the country's citizens live abroad?
+- Primary destination countries for the diaspora
+- Does this affect CV format expectations (e.g., driving Europass adoption)?
+
+## 16. Industry variation
+- Where within the country do CV conventions diverge most sharply by industry?
+- IT/tech sector vs traditional sectors (banking, insurance, public admin)
+- Public vs private sector
+- Startup vs enterprise
+- Internationally-oriented vs domestically-focused companies
+
+## 17. ATS penetration
+- How widely are applicant tracking systems used by local employers?
+- Which ATS platforms dominate (Workday, SmartRecruiters, Teamtailor, local systems)?
+- Do major domestic job boards run their own ATS (like Pracuj.pl)?
+
+## 18. Recent shifts (2-3 year window)
+- Any recent policy, legal, or cultural shifts affecting CV conventions?
+- Any employment authority reforms, law amendments, or enforcement changes?
+- Shifts in photo conventions, personal data norms, or language expectations?
+- Emergence of new dominant platforms or decline of old ones?
+
+## 19. Conflicting guidance to flag
+- Where do international sources (Indeed generic guides, Zety, Resume.io) contradict local sources on Finland?
+- Where do traditional/older local sources contradict modern/younger local sources?
+- Flag these conflicts explicitly - I need to know where "common wisdom" is wrong for this market.
+
+## Format of output
+- Cite specific sources (with URLs where possible)
+- Flag conflicting information openly rather than smoothing it over
+- Skip categories that genuinely don't apply (e.g., skip Europass for non-European markets)
+
+
+## Explicit scope exclusions
+- Do NOT research interview preparation, cover letters, lettre de motivation, motivatiebrief, or any application components beyond the CV itself
+- Do NOT research specialty CVs (academic CVs, medical CVs, creative portfolios) unless the country has industry-specific conventions that meaningfully diverge from the general CV norm
+- Do NOT produce finished CV guide copy - I need factual findings, not polished content

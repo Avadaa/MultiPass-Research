@@ -1,0 +1,6 @@
+sentence-transformers
+numpy
+langchain-openai
+langchain-core
+crawl4ai
+python-dotenv
