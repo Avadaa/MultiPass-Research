@@ -40,6 +40,7 @@ from config import (
     LOCALE,
     SEARCH_ENGINE,
     SEARCH_RESULT_COUNT,
+    SEMANTIC_CACHE_MATCHING,
 )
 from llm import ChatLlamaServer
 import search_brave
@@ -143,9 +144,13 @@ def _store(
     engine: str,
     region: str,
     query: str,
-    embedding: np.ndarray,
+    embedding,  # np.ndarray when SEMANTIC_CACHE_MATCHING, else bytes (b"")
     results: list[dict],
 ) -> None:
+    if isinstance(embedding, (bytes, bytearray)):
+        emb_bytes = bytes(embedding)
+    else:
+        emb_bytes = embedding.astype(np.float32).tobytes()
     conn.execute(
         "INSERT INTO search_cache "
         "(timestamp, search_engine, region, query, query_embedding, results) "
@@ -155,7 +160,7 @@ def _store(
             engine,
             region,
             query,
-            embedding.astype(np.float32).tobytes(),
+            emb_bytes,
             json.dumps(results),
         ),
     )
@@ -350,11 +355,29 @@ def _resolve_one(
         )
         return json.loads(picked[3])
 
-    embs = np.stack([r[2] for r in snapshot])  # (N, 1024)
+    if not SEMANTIC_CACHE_MATCHING:
+        # Literal-only mode: no exact match found, fetch fresh and store
+        # without an embedding (cache row still allows future exact matches).
+        print("[cache] no exact match (semantic matching disabled); fetching fresh.")
+        results = _fetch()
+        _store(conn, SEARCH_ENGINE, region, query, b"", results)
+        return results
+
+    # Filter to rows with valid embeddings (literal-only-stored rows have
+    # empty arrays from np.frombuffer(b'', ...). Mixing them into np.stack
+    # would crash on shape mismatch).
+    embedded = [r for r in snapshot if r[2].size > 0]
+    if not embedded:
+        print("[cache] no embedded rows in snapshot; fetching fresh.")
+        results = _fetch()
+        _store(conn, SEARCH_ENGINE, region, query, q_emb, results)
+        return results
+
+    embs = np.stack([r[2] for r in embedded])  # (N, 1024)
     sims = embs @ q_emb                         # (N,)
     order = np.argsort(-sims)[:TOP_K]
 
-    top_rows = [snapshot[i] for i in order]
+    top_rows = [embedded[i] for i in order]
     top_sims = [float(sims[i]) for i in order]
 
     if top_sims[0] < SIM_FLOOR:
@@ -432,13 +455,17 @@ def search(
     region_eff = region if region is not None else LOCALE
 
     conn = _open_cache()
-    embedder = _load_embedder()
 
-    # Batch-embed all queries in one call (GPU-friendly).
-    raw = embedder.encode(queries, normalize_embeddings=True)
-    q_embs = np.asarray(raw, dtype=np.float32)
-    if q_embs.ndim == 1:
-        q_embs = q_embs.reshape(1, -1)
+    # Embedder + per-query embeddings are only used by the semantic match
+    # layer. In literal-only mode we skip the heavy load entirely.
+    if SEMANTIC_CACHE_MATCHING:
+        embedder = _load_embedder()
+        raw = embedder.encode(queries, normalize_embeddings=True)
+        q_embs = np.asarray(raw, dtype=np.float32)
+        if q_embs.ndim == 1:
+            q_embs = q_embs.reshape(1, -1)
+    else:
+        q_embs = [b""] * len(queries)  # placeholder; never used downstream
 
     # Snapshot taken ONCE before any query runs. Fresh fetches from this batch
     # are stored but don't re-enter the snapshot, so later queries in the same

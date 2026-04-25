@@ -35,6 +35,19 @@ prompt.txt (your research brief)
 
 ## Setup
 
+A virtualenv is optional but recommended:
+
+```bash
+# Linux / macOS
+python -m venv .venv && source .venv/bin/activate
+
+# Windows (PowerShell)
+python -m venv .venv; .venv\Scripts\Activate.ps1
+
+# Windows (cmd / Git Bash)
+python -m venv .venv && .venv\Scripts\activate
+```
+
 ```bash
 pip install -r requirements.txt
 playwright install chromium
@@ -54,7 +67,7 @@ Process management is cross-platform:
 - **Linux**: child gets `prctl(PR_SET_PDEATHSIG, SIGTERM)`, so the kernel reaps it on any parent death (including `SIGKILL`).
 - **macOS**: graceful teardown via `atexit` + `SIGTERM`. Hard parent crashes can leave a stale sidecar, but the next run reuses any sidecar already answering at `/docs`, so it self-heals.
 
-Start llama-server (example, tune to your hardware):
+Start [llama-server](https://github.com/ggml-org/llama.cpp/releases) (example, tune to your hardware and exact model):
 
 ```bash
 llama-server.exe \
@@ -80,7 +93,7 @@ Set locales in `config.py`, write your brief into `prompt.txt`, then:
 python research.py
 ```
 
-Creates `logs/{topic}-{timestamp}/`.
+Creates `logs/{topic}-{timestamp}/`. On startup, `auto_start.py` runs pre-flight checks (libraries, credentials, llama-server, search engine, crawl4ai). Disable with `AUTO_START_CHECKS = False` in `config.py`.
 
 ### Resume
 
@@ -170,6 +183,7 @@ logs/{topic}-{timestamp}/
 - **Fetch deduplication** - URLs are fetched once per run (in-memory cache + disk cache under `pages/`). Resume preloads the disk cache, so stage 5 onwards don't re-hit the network.
 - **DDGS sidecar autostart** - importing `search_ddg` while `SEARCH_ENGINE = "ddgs"` blocks until the sidecar is responding, then registers an `atexit` reaper. OS-level hardening (Windows Job Object, Linux `PR_SET_PDEATHSIG`) ensures the sidecar dies with the parent even on hard crashes.
 - **Fail-loud search** - non-200 responses from Brave or DDGS abort by default (`AUTO_CRASH_ON_FAILED_SEARCH = True`). The pipeline prints a one-line resume command; the cache holds every query that succeeded, so only the failed ones re-run.
+- **Semantic cache (optional)** - default-on. Past queries are embedded with `BAAI/bge-m3` (sentence-transformers) and cosine-ranked against the new query; an LLM picker decides whether the closest cached row genuinely answers it. Set `SEMANTIC_CACHE_MATCHING = False` to drop sentence-transformers + bge-m3 + torch and fall back to literal-only matching (lowercased + punctuation-stripped exact match) - faster startup, smaller install, no fuzzy paraphrase hits.
 
 ## Module map
 

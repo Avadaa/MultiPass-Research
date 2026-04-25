@@ -42,6 +42,18 @@ DDGS_BACKEND = "google,duckduckgo"
 #   Use only if partial coverage is acceptable.
 AUTO_CRASH_ON_FAILED_SEARCH = True
 
+# Pre-flight checks at research.py startup: required libraries, engine creds,
+# prompt.txt, plus live probes (llama-server, search engine, crawl4ai fetch).
+# True = fail fast with actionable errors. False = skip; trust the environment.
+AUTO_START_CHECKS = True
+
+# Semantic cache layer for the search cache. When True, queries are embedded
+# with bge-m3 (sentence-transformers) and matched against past queries via
+# cosine similarity + an LLM picker, so paraphrases hit cache. When False,
+# only literal matching is used (lowercase + strip punctuation) and
+# sentence-transformers / bge-m3 / torch can be dropped from the install.
+SEMANTIC_CACHE_MATCHING = True
+
 # ---------------------------------------------------------------------------
 # Locale — shapes search ranking AND fills in language placeholders in
 # research.py's stage-1 query-generator system prompt.

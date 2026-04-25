@@ -45,6 +45,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 
 from config import (
     AUTO_CRASH_ON_FAILED_SEARCH,
+    AUTO_START_CHECKS,
     COUNTRY,
     LANGUAGE,
     LOCALE,
@@ -1459,6 +1460,10 @@ def main():
         sys.exit("--continue requires --run-dir <path>")
     if args.run_dir and args.resume_stage is None and not args.continue_mode:
         sys.exit("--run-dir requires either --resume-stage <N> or --continue")
+
+    if AUTO_START_CHECKS:
+        from auto_start import run_checks
+        run_checks()
 
     t0 = time.perf_counter()
 
