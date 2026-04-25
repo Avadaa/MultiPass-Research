@@ -134,12 +134,15 @@ SEARCH_ENGINE       = "brave"                # or "ddgs"
 SEARCH_RESULT_COUNT = 30                     # per-query result count (ddgs has hard cap 10-20)
 DDGS_BACKEND        = "google,duckduckgo"    # ddgs only; comma-separated, in order. e.g. "auto", "duckduckgo", "google,duckduckgo,bing"
 AUTO_CRASH_ON_FAILED_SEARCH = True           # see "Search failure handling" below
-LOCALE              = "fi-fi"                # DDGS region
-LANGUAGE            = "Finnish"              # used in stage-1 query template
-COUNTRY             = "FI"                   # Brave country (ISO 3166-1 alpha-2)
-SEARCH_LANG         = "fi"                   # Brave search lang (ISO 639-1)
-UI_LANG             = "fi-FI"                # Brave UI lang (BCP-47)
+AUTO_START_CHECKS   = True                   # pre-flight checks at startup (libs, creds, llama-server, search, crawl4ai)
+SEMANTIC_CACHE_MATCHING = True               # bge-m3 fuzzy cache; False drops sentence-transformers + torch
+
+LANGUAGE            = "English"              # query language; pick from data/languages.json
+COUNTRY             = "US"                   # ISO 3166-1 alpha-2; geographic search bias
+# SEARCH_LANG / UI_LANG / LOCALE are derived from LANGUAGE + COUNTRY - don't set them by hand.
 ```
+
+The 98-entry language table lives in `data/languages.json` (flat `{name: iso639-1}`, alphabetized). Add or edit entries there. Mismatched combos like `LANGUAGE="English" + COUNTRY="DE"` are valid - you get English-language queries against German-region search ranking. Note that Brave's API curates which `country`/`search_lang` combinations it accepts; unsupported pairs return HTTP 422 and trigger the `AUTO_CRASH_ON_FAILED_SEARCH` path.
 
 ### `research.py` knobs (top of file)
 

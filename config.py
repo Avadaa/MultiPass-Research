@@ -4,6 +4,9 @@ Behavior toggles live here. Secrets live in .env (loaded via python-dotenv).
 """
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 #ddgs api
 
 # Which search engine search.py uses.
@@ -55,23 +58,43 @@ AUTO_START_CHECKS = True
 SEMANTIC_CACHE_MATCHING = True
 
 # ---------------------------------------------------------------------------
-# Locale — shapes search ranking AND fills in language placeholders in
-# research.py's stage-1 query-generator system prompt.
+# Locale - the only two fields you set:
+#
+#   LANGUAGE : the language your search queries will be written in. Stage 1's
+#              query-generator template asks the LLM to phrase every query in
+#              this language ("Write EVERY word in {LANGUAGE}..."). Pick a
+#              human-readable name from the keys of _LANGUAGE_TO_CODE below.
+#   COUNTRY  : the geographic target for the search. ISO 3166-1 alpha-2,
+#              uppercase (e.g. "FI", "DE", "US"). Biases the search engine to
+#              surface more domestic pages from that country.
+#
+# Everything else (SEARCH_LANG, UI_LANG, LOCALE) is derived from these two.
+# Don't hand-edit the derived fields - change LANGUAGE / COUNTRY instead.
+#
+# Mismatched combos are valid: LANGUAGE="Finnish" + COUNTRY="SE" gets you
+# Finnish-language queries against Swedish-region search results.
 # ---------------------------------------------------------------------------
 
-# DDGS region / locality. Format is "<lang>-<country>" (e.g. "fi-fi", "us-en",
-# "se-sv", "de-de"). Shapes result ranking and surfaces more domestic pages.
-# Only consumed by the DDGS engine; Brave ignores it.
-LOCALE = "fi-fi"
-
-# Human-readable language name, used by research.py's stage-1 query-generator
-# template ("Write EVERY word in {LANGUAGE}..."). E.g. "Finnish", "Swedish".
 LANGUAGE = "Finnish"
+COUNTRY  = "FI" #GB, AU, NZ, DE...
 
-# Brave Search localization. Brave ignores LOCALE and uses these instead.
-#   COUNTRY     : ISO 3166-1 alpha-2, uppercase (e.g. "FI", "SE", "US").
-#   SEARCH_LANG : ISO 639-1, lowercase (e.g. "fi", "en").
-#   UI_LANG     : BCP-47 (e.g. "fi-FI", "en-US").
-COUNTRY = "FI"
-SEARCH_LANG = "fi"
-UI_LANG = "fi-FI"
+# Human-readable language name -> ISO 639-1 lowercase code. Loaded from
+# data/languages.json; edit that file to add or change entries. The code
+# is what Brave's `search_lang` and DDG's `kl` consume.
+_LANGUAGES_PATH = Path(__file__).parent / "data" / "languages.json"
+with _LANGUAGES_PATH.open(encoding="utf-8") as _f:
+    _LANGUAGE_TO_CODE: dict[str, str] = json.load(_f)
+
+if LANGUAGE not in _LANGUAGE_TO_CODE:
+    raise ValueError(
+        f"config.LANGUAGE = {LANGUAGE!r} is not in _LANGUAGE_TO_CODE. "
+        f"Add an entry, or pick one of: {sorted(_LANGUAGE_TO_CODE)}"
+    )
+
+# --- derived ---
+SEARCH_LANG = _LANGUAGE_TO_CODE[LANGUAGE]              # ISO 639-1 lowercase, e.g. "fi"
+UI_LANG     = f"{SEARCH_LANG}-{COUNTRY}"               # BCP-47, e.g. "fi-FI"
+# DDG's `kl` param format is `<country>-<lang>` lowercased: "fi-fi", "us-en",
+# "se-sv", "de-de". (Looks palindromic for Finland/German because their
+# country and language codes match; not the case for e.g. Sweden -> "se-sv".)
+LOCALE      = f"{COUNTRY.lower()}-{SEARCH_LANG}"
