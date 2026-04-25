@@ -17,6 +17,31 @@ SEARCH_ENGINE = "brave"
 # Default number of results to fetch per query when no explicit count is passed.
 SEARCH_RESULT_COUNT = 30
 
+# DDGS backend(s) — comma-separated, in order of preference. Common values:
+#   "auto"                    — let ddgs pick
+#   "duckduckgo"              — DuckDuckGo only
+#   "google,duckduckgo"       — Google first, fallback DuckDuckGo
+#   "google,duckduckgo,bing"  — three-way
+# Only consumed by the DDGS engine.
+DDGS_BACKEND = "google,duckduckgo"
+
+# Behavior when a search backend returns a non-200 HTTP response — typically
+# a rate limit (429), API quota/auth problem (401/403), upstream block, or
+# server error (5xx). DDGS additionally surfaces 2xx-non-200 codes (e.g. 202)
+# when upstream DuckDuckGo throttles its scraper.
+#
+# True (default): abort the run immediately. Stage 2 is fragile — one failed
+#   query means that query's URLs are absent from pass-1 onward, which
+#   silently degrades the final report. The whole research becomes severely
+#   handicapped. Crashing loud lets you fix the upstream issue (rotate keys,
+#   wait out the rate limit, switch SEARCH_ENGINE) and resume cleanly with
+#   --resume-stage 2 --continue. The semantic cache persists every query
+#   that succeeded before the failure, so the resume hits cache for those.
+#
+# False: log the failure and continue with whatever queries did succeed.
+#   Use only if partial coverage is acceptable.
+AUTO_CRASH_ON_FAILED_SEARCH = True
+
 # ---------------------------------------------------------------------------
 # Locale — shapes search ranking AND fills in language placeholders in
 # research.py's stage-1 query-generator system prompt.

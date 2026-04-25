@@ -5,3 +5,5 @@ logs/
 cache/
 .env
 daddy_minions.py
+_tests/
+TODO

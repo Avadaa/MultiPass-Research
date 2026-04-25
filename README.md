@@ -6,6 +6,8 @@ Tested with Qwen3-35B-A3B on llama.cpp + Brave Search API. Pipeline assumes a lo
 
 Used with the Brave search engine by default, but Brave is a paid option. DuckDuckGo Search (`ddgs`) is also supported, although `SEARCH_RESULT_COUNT` is limited with ddgs.
 
+Page fetching with [Crawl4AI](https://github.com/unclecode/crawl4ai) - an open-source LLM-friendly web crawler that handles Playwright orchestration, anti-bot evasion, and clean markdown extraction out of the box. The pipeline wraps it in `fetch.py` with a small concurrency-limited cache.
+
 ## What it does
 
 ```
@@ -28,7 +30,7 @@ prompt.txt (your research brief)
 
 - Python 3.10+
 - A local OpenAI-compatible LLM server. Tested with `llama-server` from llama.cpp running Qwen3-35B-A3B.
-- Brave Search API key (set `BRAVE_API_KEY` in `.env`) - OR a local DDGS sidecar at `127.0.0.1:8000`.
+- Brave Search API key (set `BRAVE_API_KEY` in `.env`) - OR install `ddgs[api]` and set `SEARCH_ENGINE = "ddgs"` in `config.py` (the sidecar autostarts; no separate terminal needed).
 - Playwright Chromium (`crawl4ai` installs it).
 
 ## Setup
@@ -41,11 +43,16 @@ echo BRAVE_API_KEY=... > .env
 
 ### DDGS (free alternative to Brave)
 
-In another terminal, run `ddgs api`. Default binding is `http://127.0.0.1:8000`. Install once:
-
 ```bash
 pip install ddgs[api]
 ```
+
+Set `SEARCH_ENGINE = "ddgs"` in `config.py`. The `ddgs api` sidecar autostarts on first import of `search_ddg` (blocks until `http://127.0.0.1:8000/docs` responds) and is reaped at process exit. No separate terminal. If a sidecar is already running on port 8000, it gets reused as-is.
+
+Process management is cross-platform:
+- **Windows**: child is assigned to a Job Object with `KILL_ON_JOB_CLOSE`, so the sidecar dies even on Task Manager kills, segfaults, OOM, or `os._exit()`.
+- **Linux**: child gets `prctl(PR_SET_PDEATHSIG, SIGTERM)`, so the kernel reaps it on any parent death (including `SIGKILL`).
+- **macOS**: graceful teardown via `atexit` + `SIGTERM`. Hard parent crashes can leave a stale sidecar, but the next run reuses any sidecar already answering at `/docs`, so it self-heals.
 
 Start llama-server (example, tune to your hardware):
 
@@ -103,13 +110,15 @@ python research.py --run-dir logs/<run> --resume-stage 8
 ### `config.py`
 
 ```python
-SEARCH_ENGINE       = "brave"     # or "ddgs"
-SEARCH_RESULT_COUNT = 30          # default per-query result count (ddgs has hard cap 10-20)
-LOCALE              = "fi-fi"     # DDGS region
-LANGUAGE            = "Finnish"   # used in stage-1 query template
-COUNTRY             = "FI"        # Brave country (ISO 3166-1 alpha-2)
-SEARCH_LANG         = "fi"        # Brave search lang (ISO 639-1)
-UI_LANG             = "fi-FI"     # Brave UI lang (BCP-47)
+SEARCH_ENGINE       = "brave"                # or "ddgs"
+SEARCH_RESULT_COUNT = 30                     # per-query result count (ddgs has hard cap 10-20)
+DDGS_BACKEND        = "google,duckduckgo"    # ddgs only; comma-separated, in order. e.g. "auto", "duckduckgo", "google,duckduckgo,bing"
+AUTO_CRASH_ON_FAILED_SEARCH = True           # see "Search failure handling" below
+LOCALE              = "fi-fi"                # DDGS region
+LANGUAGE            = "Finnish"              # used in stage-1 query template
+COUNTRY             = "FI"                   # Brave country (ISO 3166-1 alpha-2)
+SEARCH_LANG         = "fi"                   # Brave search lang (ISO 639-1)
+UI_LANG             = "fi-FI"                # Brave UI lang (BCP-47)
 ```
 
 ### `research.py` knobs (top of file)
@@ -127,6 +136,10 @@ UI_LANG             = "fi-FI"     # Brave UI lang (BCP-47)
 ### `prompt.txt`
 
 Plain text. Contains the research brief - section structure, what to find, what to skip. The pipeline does NOT strip or alter it.
+
+### Search failure handling
+
+Non-200 responses (429 rate limit, 401-403 auth, 5xx, DDGS's 202 throttle) abort the run by default and print a one-line `--resume-stage 2 --continue` command. The semantic cache holds every query that already returned, so the resume only re-runs the failed ones. Set `AUTO_CRASH_ON_FAILED_SEARCH = False` to skip failures instead (partial coverage; degrades the report).
 
 ## Output structure
 
@@ -155,6 +168,8 @@ logs/{topic}-{timestamp}/
 - **Hierarchical merge (stage 8)** - pairs of stage-6 chunks merge into super-chunks; super-chunks merge again; repeat until one report remains. Odd-out items carry through unchanged to the next round.
 - **Per-stage checkpoints** - `intermediates.json` is rewritten atomically after every stage with the full pipeline state. Resume after a crash by parsing this + the per-stage md files.
 - **Fetch deduplication** - URLs are fetched once per run (in-memory cache + disk cache under `pages/`). Resume preloads the disk cache, so stage 5 onwards don't re-hit the network.
+- **DDGS sidecar autostart** - importing `search_ddg` while `SEARCH_ENGINE = "ddgs"` blocks until the sidecar is responding, then registers an `atexit` reaper. OS-level hardening (Windows Job Object, Linux `PR_SET_PDEATHSIG`) ensures the sidecar dies with the parent even on hard crashes.
+- **Fail-loud search** - non-200 responses from Brave or DDGS abort by default (`AUTO_CRASH_ON_FAILED_SEARCH = True`). The pipeline prints a one-line resume command; the cache holds every query that succeeded, so only the failed ones re-run.
 
 ## Module map
 
@@ -175,3 +190,4 @@ logs/{topic}-{timestamp}/
 - Stage 6 chunk size needs to fit in your llama-server's per-slot context budget (`-c <total> / --parallel <N>`). At `STAGE_6_CHUNK_SIZE=30` and ~2.5k-token pass-2 outputs, expect ~88k input tokens per chunk - fits comfortably in a 131k slot.
 - Stage 8 with thinking ON tends to over-compress (the model spends output budget on the thinking trace). Default is OFF.
 - Qwen3-MoE's hybrid SSM/recurrent layers invalidate llama.cpp's prompt cache across diverging prompts (PR #13194), so each chunk pays a full prefill. This is unavoidable on this model class.
+- macOS has no `PR_SET_PDEATHSIG` equivalent and no Job Object - if the parent dies hard (`SIGKILL`, segfault, force-quit), the DDGS sidecar can outlive it. Mitigation: the next run reuses any sidecar already answering at `/docs:8000`, so no manual cleanup needed in practice.

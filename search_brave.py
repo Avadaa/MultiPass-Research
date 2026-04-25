@@ -19,6 +19,7 @@ import json
 import os
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -63,7 +64,18 @@ def _fetch_page(
         },
     )
     with urllib.request.urlopen(req, timeout=15) as r:
-        data = json.loads(r.read())
+        body = r.read()
+        # urlopen auto-raises HTTPError for 4xx/5xx, but 2xx-non-200 (e.g. 202
+        # "Accepted, no results yet") slips through silently and would parse
+        # as an empty/degraded payload. Re-raise it as HTTPError so the
+        # orchestration layer treats every non-200 the same way.
+        if r.status != 200:
+            raise urllib.error.HTTPError(
+                req.full_url, r.status,
+                f"Brave returned HTTP {r.status} (expected 200)",
+                r.headers, None,
+            )
+        data = json.loads(body)
     return data.get("web", {}).get("results", [])
 
 

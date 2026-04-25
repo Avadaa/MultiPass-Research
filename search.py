@@ -29,12 +29,18 @@ import argparse
 import json
 import sqlite3
 import time
+import urllib.error
 from pathlib import Path
 
 import numpy as np
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from config import SEARCH_ENGINE, LOCALE, SEARCH_RESULT_COUNT
+from config import (
+    AUTO_CRASH_ON_FAILED_SEARCH,
+    LOCALE,
+    SEARCH_ENGINE,
+    SEARCH_RESULT_COUNT,
+)
 from llm import ChatLlamaServer
 import search_brave
 import search_ddg
@@ -448,10 +454,22 @@ def search(
     for i, q in enumerate(queries):
         if len(queries) > 1:
             print(f"\n=== query {i + 1}/{len(queries)}: {q!r} ===")
-        results = _resolve_one(
-            q, q_embs[i], snapshot, conn, count, use_cache,
-            region_eff, country, search_lang, ui_lang,
-        )
+        try:
+            results = _resolve_one(
+                q, q_embs[i], snapshot, conn, count, use_cache,
+                region_eff, country, search_lang, ui_lang,
+            )
+        except urllib.error.HTTPError as e:
+            if AUTO_CRASH_ON_FAILED_SEARCH:
+                raise
+            # Soft mode: log the failure and continue with an empty result
+            # for this query. Other queries in the batch still run.
+            print(
+                f"[search] query {i + 1} failed: HTTP {e.code} "
+                f"({e.reason}); continuing with empty results "
+                f"(AUTO_CRASH_ON_FAILED_SEARCH=False)"
+            )
+            results = []
         out.append(results)
     return out
 

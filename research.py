@@ -28,6 +28,7 @@ import shutil
 import sys
 import threading
 import time
+import urllib.error
 import warnings
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass, field
@@ -42,7 +43,15 @@ warnings.filterwarnings("ignore", category=ResourceWarning)
 
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from config import COUNTRY, LANGUAGE, LOCALE, SEARCH_LANG, UI_LANG
+from config import (
+    AUTO_CRASH_ON_FAILED_SEARCH,
+    COUNTRY,
+    LANGUAGE,
+    LOCALE,
+    SEARCH_ENGINE,
+    SEARCH_LANG,
+    UI_LANG,
+)
 from fetch import FETCH_CHAR_LIMIT, fetch_website
 from llm import ChatLlamaServer
 from search import search as cached_search
@@ -1651,9 +1660,28 @@ def main():
     # ---- Stage 2 ----
     if query_runs is None or pages is None:
         print("\n[stage 2] batch search (semantic cache aware) ...")
-        per_query_results = stage2_search(
-            queries, locale, country, search_lang, ui_lang,
-        )
+        try:
+            per_query_results = stage2_search(
+                queries, locale, country, search_lang, ui_lang,
+            )
+        except urllib.error.HTTPError as e:
+            # AUTO_CRASH_ON_FAILED_SEARCH bubbled the failure up here. Print
+            # a self-contained recovery hint and exit. The semantic cache has
+            # already persisted every query that succeeded before the failure,
+            # so the suggested resume command hits cache for those queries.
+            cmd = f"python research.py --run-dir {run_dir} --resume-stage 2 --continue"
+            print(
+                f"\n[stage 2] FAILED.\n"
+                f"Your {SEARCH_ENGINE!r} search backend failed to provide "
+                f"results — this is usually a rate limit, an API quota / auth "
+                f"issue, or an upstream block. The given error code was "
+                f"{e.code} ({e.reason}).\n\n"
+                f"You can continue the run with: {cmd}\n\n"
+                f"(To proceed past failed queries instead of aborting, set "
+                f"AUTO_CRASH_ON_FAILED_SEARCH = False in config.py.)",
+                file=sys.stderr,
+            )
+            sys.exit(2)
         for i, rs_ in enumerate(per_query_results, 1):
             print(f"  query {i}: {len(rs_)} results")
         _write_artifact(
