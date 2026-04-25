@@ -170,12 +170,14 @@ def _check_search_query() -> str | None:
 
 
 def _check_crawl4ai_fetch() -> str | None:
-    """Fetch a known-good URL via crawl4ai. Slow (Playwright spin-up): ~5-15s."""
+    """Fetch a known-good URL via crawl4ai. force=True bypasses the page
+    cache so this is a true wire test every time. Slow (Playwright spin-up
+    + actual fetch): ~5-15s."""
     url = "https://github.com"
     t0 = time.perf_counter()
     try:
         from fetch import fetch_website
-        content = fetch_website(url)
+        content = fetch_website(url, force=True)
     except Exception as e:
         return f"crawl4ai fetch of {url} failed: {e!r}"
 

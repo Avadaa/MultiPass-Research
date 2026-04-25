@@ -69,6 +69,13 @@ Process management is cross-platform:
 
 Start [llama-server](https://github.com/ggml-org/llama.cpp/releases) (example, tune to your hardware and exact model):
 
+No autostart scripts given, since every PC and OS is different, and your VRAM amounts might differ. Download the model that fits your hardware:
+
+- Main model: https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/tree/main
+- Smaller GPUs (quality might be subpar): https://huggingface.co/unsloth/Qwen3.5-9B-GGUF/tree/main (Q4-Q8)
+- 24GB GPUs: `Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf`
+- 24GB+ GPUs: `Qwen3.6-35B-A3B-UD-Q8_K_XL.gguf`
+
 ```bash
 llama-server.exe \
   -m <path-to>/Qwen3.6-35B-A3B-UD-Q8_K_XL.gguf \
