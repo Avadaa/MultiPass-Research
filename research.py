@@ -30,7 +30,7 @@ import threading
 import time
 import urllib.error
 import warnings
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
@@ -803,7 +803,10 @@ def stage4_pass1(pages: dict[str, Page], brief: str) -> None:
 
     with ThreadPoolExecutor(max_workers=FETCH_CONCURRENCY) as pool:
         futs = {pool.submit(_scan_one, brief, url): url for url in urls}
-        for fut in futs:
+        # Iterate by completion order, not submission order — otherwise a
+        # slow first-submitted task blocks all writes behind it even though
+        # later tasks have already finished in the pool.
+        for fut in as_completed(futs):
             url = futs[fut]
             try:
                 p1 = fut.result()
@@ -926,7 +929,10 @@ def stage5_pass2(pages: dict[str, Page], brief: str) -> None:
 
     with ThreadPoolExecutor(max_workers=LLM_CONCURRENCY) as pool:
         futs = {pool.submit(_elaborate_one, brief, p): p for p in todo}
-        for fut in futs:
+        # Iterate by completion order, not submission order — otherwise a
+        # slow first-submitted task blocks all writes behind it even though
+        # later tasks have already finished in the pool.
+        for fut in as_completed(futs):
             page = futs[fut]
             try:
                 p2 = fut.result()
