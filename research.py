@@ -869,7 +869,9 @@ def _elaborate_one(brief: str, page: Page) -> Pass2:
         brief=brief,
         content=content[:FETCH_CHAR_LIMIT],
     )
-    llm = _build_llm(0.6, 131072, PASS2_THINKING, PASS2_SCHEMA, "pass2")
+    # max_tokens=16384: ~4x p99 length observed in production (~4.1k tok).
+    # Caps runaway JSON-string generation at ~3 min instead of ~25 min.
+    llm = _build_llm(0.6, 16384, PASS2_THINKING, PASS2_SCHEMA, "pass2")
     try:
         resp = llm.invoke([
             SystemMessage(content=system),
